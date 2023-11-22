@@ -4,7 +4,7 @@ from math import sqrt
 import numpy as np
 
 class BilliardModel():
-    def __init__(self, number_of_particles=200, dimensions=2, size=1.0, temperature=300, delta_t=0.001, radius=0.1, mass = 1.0e-22):
+    def __init__(self, number_of_particles=200, dimensions=2, size=1.0, temperature=300, delta_t=0.5, radius=10, mass = 1.0e-23):
         self.size = size
         self.k_B = 1.38064852*10**-23  # Boltzmann constant
         self.temperature = temperature
@@ -131,28 +131,30 @@ class BilliardModel():
     def update_delta_t(self, new_delta_t):
         self.delta_t = new_delta_t
 
-    def update_balls(self, velocities=False):
+    def update_balls(self, v_ratio=1):
         """update if the arg isn't None"""
-        if velocities:
-            velocities = self.generate_velocities()
-            
+    
         for i in range(len(self.balls)):
             ball = self.balls[i]
-            if velocities:
-                ball.update_velocity(velocities[i])
+            ball.velocity *= v_ratio
             ball.update_mass(self.mass)
             ball.update_radius(self.radius)
 
 
     def update_mass(self, new_mass):
-        self.mass = new_mass
-        self.update_balls()
+        if new_mass != self.mass:
+            v_ratio = sqrt(self.mass / new_mass)
+            self.mass = new_mass
+            self.update_balls(v_ratio)
 
     def update_radius(self, new_radius):
-        self.radius = new_radius
-        self.update_balls()
+        if new_radius != self.radius:
+            self.radius = new_radius
+            self.update_balls()
 
     def update_temperature(self, new_temperature):
-        self.temperature = new_temperature
-        self.energy = self.convert_temperature_to_energy()
-        self.update_balls(velocities=True)
+        if new_temperature != self.temperature:
+            v_ratio = sqrt(new_temperature / self.temperature)
+            self.temperature = new_temperature
+            self.energy = self.convert_temperature_to_energy()
+            self.update_balls(v_ratio=v_ratio)
